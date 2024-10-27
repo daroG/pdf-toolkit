@@ -1,8 +1,12 @@
 import tkinter as tk
 from tkinter import ttk
+from typing import Any
 
 
 class RecordEntryPopup(tk.Entry):
+    """
+    Record entry popup.
+    """
 
     def __init__(
         self,
@@ -10,9 +14,8 @@ class RecordEntryPopup(tk.Entry):
         iid: str,
         values: tuple[str, str, str],
         column_edit_index: int = -1,
-        **kwargs,
+        **kwargs: Any,  # noqa: ANN401
     ) -> None:
-        """ If relwidth is set, then width is ignored """
         super().__init__(parent, **kwargs)
         self.treeview = parent
         self.values = values
@@ -23,8 +26,8 @@ class RecordEntryPopup(tk.Entry):
         self['exportselection'] = False
 
         self.focus_force()
-        self.bind('<Return>', self.on_return)
-        self.bind('<FocusOut>', self.on_return)
+        self.bind('<Return>', self._on_return)
+        self.bind('<FocusOut>', self._on_return)
         self.bind('<Control-a>', self.select_all)
         self.bind('<Escape>', lambda *_: self.destroy())
 
@@ -40,7 +43,7 @@ class RecordEntryPopup(tk.Entry):
 
         return self.values[:self.column_edit_index] + (self.get(),) + self.values[self.column_edit_index + 1:]
 
-    def on_return(self, _) -> None:
+    def _on_return(self, _) -> None:
         updated_values = self._get_updated_values()
 
         self.treeview.item(
@@ -50,7 +53,11 @@ class RecordEntryPopup(tk.Entry):
         )
         self.destroy()
 
-    def select_all(self, *_) -> str:
-        """ Set selection on the whole text """
+    def select_all(self, *_: Any) -> str:  # noqa: ANN401
+        """
+        Set selection on the whole text.
+
+        :return: 'break' to stop propagation
+        """
         self.selection_range(0, 'end')
         return 'break'

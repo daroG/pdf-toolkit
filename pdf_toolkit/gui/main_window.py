@@ -1,20 +1,30 @@
-from logging import getLogger, INFO
 import tkinter as tk
-from tkinter import LEFT, RIGHT, TOP, W, ttk
+from logging import getLogger, INFO
+from pathlib import Path
+from tkinter import filedialog as fd, LEFT, messagebox as mb, RIGHT, TOP, W
 
-from . import RecordEntryPopup, FileList
+from pdf_toolkit.commands import PdfCutCommand
+from pdf_toolkit.pdf_source import PdfSource
+from pdf_toolkit.pdf_toolkit import PdfToolkit
+
+from .file_list import FileList
+from .record_entry_popup import RecordEntryPopup
 
 
 LOGGER = getLogger()
 LOGGER.setLevel(INFO)
 
-def populate_treeview(treeview: ttk.Treeview) -> None:
-    treeview.insert('', 'end', text='File 1', values=('7', '1-7'))
-    treeview.insert('', 'end', text='File 2', values=('20', '1-20'))
-    treeview.insert('', 'end', text='File 3', values=('30', '1-30'))
+
+def _populate_treeview(treeview: FileList) -> None:
+    treeview.add_file(PdfSource(Path('Rozdz1_tresc.pdf')))
+    treeview.add_file(PdfSource(Path('Skan_Arkusz_Test_odp.pdf')))
 
 
 class MainWindow(tk.Frame):
+    """
+    Main window widget.
+    """
+
     def __init__(self, parent: tk.Widget) -> None:
         super().__init__(parent)
         self.parent = parent
@@ -30,7 +40,6 @@ class MainWindow(tk.Frame):
         self._init_left_frame(self.upper_frame)
         self._init_right_frame(self.upper_frame)
 
-
     def _init_left_frame(self, parent: tk.Widget) -> None:
         self.left_frame = tk.Frame(parent, width=100, height=400, bg='blue')
 
@@ -38,6 +47,10 @@ class MainWindow(tk.Frame):
         self.add_file_button.pack(pady=5)
         self.copy_selection_button = tk.Button(self.left_frame, width=80, text='Copy selection')
         self.copy_selection_button.pack(pady=5)
+        self.delete_selection_button = tk.Button(self.left_frame, width=80, text='Delete selection')
+        self.delete_selection_button.pack(pady=5)
+        self.save_button = tk.Button(self.left_frame, width=80, text='Save')
+        self.save_button.pack(pady=5)
         self.left_frame.pack(side=LEFT, fill=tk.BOTH)
         self.left_frame.pack_propagate(False)
 
@@ -59,13 +72,34 @@ class MainWindow(tk.Frame):
             self._handle_double_click,
         )
 
-        populate_treeview(self.treeview)
+        _populate_treeview(self.treeview)
 
     def _add_bindings(self) -> None:
         self.add_file_button.bind('<Button-1>', self._handle_add_file)
+        self.copy_selection_button.bind('<Button-1>', self._handle_copy_file)
+        self.delete_selection_button.bind('<Button-1>', self._handle_delete_file)
+        self.save_button.bind('<Button-1>', self._handle_save)
 
-    def _handle_add_file(self, event: tk.Event) -> None:
-        self.treeview.add_file(('File name x', '4', '1-4'))
+    def _handle_add_file(self, _: tk.Event) -> None:
+        filename = fd.askopenfilename(title='Add another pdf')
+        source = PdfSource(filename)
+        self.treeview.add_file(source)
+
+    def _handle_copy_file(self, _: tk.Event) -> None:
+        files = self.treeview.get_selected_file_sources()
+        for file in files:
+            self.treeview.add_file(file)
+
+    def _handle_delete_file(self, _: tk.Event) -> None:
+        selected_rows = self.treeview.selection()
+        for row_id in selected_rows:
+            self.treeview.delete(row_id)
+
+    def _handle_save(self, _: tk.Event) -> None:
+        sources = self.treeview.get_ordered_files()
+        save_pdf(sources)
+
+        print(sources)
 
     def _handle_double_click(self, rowid: str, column: str, is_column_editable: bool) -> None:
         print(rowid, column, is_column_editable)
@@ -82,8 +116,21 @@ class MainWindow(tk.Frame):
         # place Entry popup properly
         values = self.treeview.get_all_row_values(rowid)
         self.entryPopup = RecordEntryPopup(self.treeview, rowid, values, 2)
-        self.entryPopup.place(x=x, y=y+pady, anchor=W, relwidth=1)
+        self.entryPopup.place(x=x, y=y + pady, anchor=W, relwidth=1)
 
+
+def save_pdf(sources: list[PdfSource]) -> None:
+    if not sources:
+        mb.showinfo(
+            'No pdf sources',
+            'There is no possibility to create empty pdf file.\nAdd new sources to merge them.',
+        )
+        return
+    for source in sources:
+        source.commands.append(PdfCutCommand(source.pages_expresion))
+    toolkit = PdfToolkit(sources)
+    toolkit.execute_commands()
+    toolkit.save_results()
 
 
 root = tk.Tk()

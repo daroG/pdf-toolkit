@@ -51,18 +51,18 @@ class MainWindow(tk.Frame):
         self.save_button = tk.Button(self.left_frame, width=80, text='Save')
         self.save_button.pack(pady=5)
         self.left_frame.pack(side=LEFT, fill=tk.BOTH)
-        self.left_frame.pack_propagate(False)
+        self.left_frame.pack_propagate(flag=False)
 
     def _init_right_frame(self, parent: tk.Widget) -> None:
         self.right_frame = tk.Frame(parent, width=700, height=400, bg='red')
         self.right_frame.pack(side=RIGHT, fill=tk.BOTH, expand=True)
-        self.right_frame.pack_propagate(False)
+        self.right_frame.pack_propagate(flag=False)
         self._init_treeview(self.right_frame)
 
     def _init_bottom_frame(self) -> None:
         self.bottom_frame = tk.Frame(self, width=800, height=200, bg='yellow')
         self.bottom_frame.pack(side=TOP, fill=tk.BOTH, expand=True)
-        self.bottom_frame.pack_propagate(False)
+        self.bottom_frame.pack_propagate(flag=False)
 
     def _init_treeview(self, parent: tk.Widget) -> None:
         self.treeview = FileList(parent)
@@ -95,10 +95,16 @@ class MainWindow(tk.Frame):
 
 
 def save_pdf(sources: list[PdfSource]) -> None:
+    """
+    Save result pdf.
+
+    :param sources: list of PdfSources
+    """
     if not sources:
         mb.showinfo(
             'No pdf sources',
-            'There is no possibility to create empty pdf file.\nAdd new sources to merge them.',
+            'There is no possibility to create empty pdf file.\n'
+            'Add new sources to merge them.',
         )
         return
     for source in sources:

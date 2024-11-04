@@ -1,14 +1,13 @@
 import tkinter as tk
 from logging import getLogger, INFO
 from pathlib import Path
-from tkinter import filedialog as fd, LEFT, messagebox as mb, RIGHT, TOP, W
+from tkinter import filedialog as fd, LEFT, messagebox as mb, RIGHT, TOP
 
 from pdf_toolkit.commands import PdfCutCommand
 from pdf_toolkit.pdf_source import PdfSource
 from pdf_toolkit.pdf_toolkit import PdfToolkit
 
 from .file_list import FileList
-from .record_entry_popup import RecordEntryPopup
 
 
 LOGGER = getLogger()
@@ -66,12 +65,7 @@ class MainWindow(tk.Frame):
         self.bottom_frame.pack_propagate(False)
 
     def _init_treeview(self, parent: tk.Widget) -> None:
-        self.treeview = FileList(
-            parent,
-            2,
-            self._handle_double_click,
-        )
-
+        self.treeview = FileList(parent)
         _populate_treeview(self.treeview)
 
     def _add_bindings(self) -> None:
@@ -98,25 +92,6 @@ class MainWindow(tk.Frame):
     def _handle_save(self, _: tk.Event) -> None:
         sources = self.treeview.get_ordered_files()
         save_pdf(sources)
-
-        print(sources)
-
-    def _handle_double_click(self, rowid: str, column: str, is_column_editable: bool) -> None:
-        print(rowid, column, is_column_editable)
-        if not is_column_editable:
-            return
-
-        # get column position info
-        bbox_values = self.treeview.bbox(rowid, column)
-        if isinstance(bbox_values, str):
-            return
-        x, y, _, height = bbox_values
-        pady = height // 2
-
-        # place Entry popup properly
-        values = self.treeview.get_all_row_values(rowid)
-        self.entryPopup = RecordEntryPopup(self.treeview, rowid, values, 2)
-        self.entryPopup.place(x=x, y=y + pady, anchor=W, relwidth=1)
 
 
 def save_pdf(sources: list[PdfSource]) -> None:

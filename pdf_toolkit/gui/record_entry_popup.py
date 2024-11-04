@@ -43,7 +43,7 @@ class RecordEntryPopup(tk.Entry):
 
         return self.values[:self.column_edit_index] + (self.get(),) + self.values[self.column_edit_index + 1:]
 
-    def _on_return(self, _) -> None:
+    def _on_return(self, _: Any) -> None:  # noqa: ANN401
         updated_values = self._get_updated_values()
 
         self.treeview.item(

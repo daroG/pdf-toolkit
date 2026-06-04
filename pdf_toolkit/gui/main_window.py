@@ -1,6 +1,6 @@
+import contextlib
 import tkinter as tk
 from logging import getLogger, INFO
-from pathlib import Path
 from tkinter import filedialog as fd, LEFT, messagebox as mb, RIGHT, TOP
 
 from pdf_toolkit.commands import PdfCutCommand
@@ -14,23 +14,19 @@ LOGGER = getLogger()
 LOGGER.setLevel(INFO)
 
 
-def _populate_treeview(treeview: FileList) -> None:
-    treeview.add_file(PdfSource(Path('Rozdz1_tresc.pdf')))
-    treeview.add_file(PdfSource(Path('Skan_Arkusz_Test_odp.pdf')))
-
-
 class MainWindow(tk.Frame):
     """
     Main window widget.
     """
 
-    def __init__(self, parent: tk.Widget) -> None:
+    def __init__(self, parent: tk.Tk) -> None:
         super().__init__(parent)
         self.parent = parent
         self._init_upper_frame()
         self._init_bottom_frame()
         self.pack()
 
+        parent.title('PDF merging toolkit')
         self._add_bindings()
 
     def _init_upper_frame(self) -> None:
@@ -66,18 +62,23 @@ class MainWindow(tk.Frame):
 
     def _init_treeview(self, parent: tk.Widget) -> None:
         self.treeview = FileList(parent)
-        _populate_treeview(self.treeview)
 
     def _add_bindings(self) -> None:
         self.add_file_button.bind('<Button-1>', self._handle_add_file)
         self.copy_selection_button.bind('<Button-1>', self._handle_copy_file)
         self.delete_selection_button.bind('<Button-1>', self._handle_delete_file)
+        self.parent.bind('<O>', self._handle_add_file)
+        self.parent.bind('<o>', self._handle_add_file)
+        self.treeview.bind('<Delete>', self._handle_delete_file)
         self.save_button.bind('<Button-1>', self._handle_save)
 
     def _handle_add_file(self, _: tk.Event) -> None:
-        filename = fd.askopenfilename(title='Add another pdf')
-        source = PdfSource(filename)
-        self.treeview.add_file(source)
+        filenames = fd.askopenfilenames(title='Add another pdf')
+        if filenames == '':
+            return
+        for filename in filenames:
+            source = PdfSource(filename)
+            self.treeview.add_file(source)
 
     def _handle_copy_file(self, _: tk.Event) -> None:
         files = self.treeview.get_selected_file_sources()
@@ -103,15 +104,21 @@ def save_pdf(sources: list[PdfSource]) -> None:
     if not sources:
         mb.showinfo(
             'No pdf sources',
-            'There is no possibility to create empty pdf file.\n'
-            'Add new sources to merge them.',
+            'There is no possibility to create empty pdf file.\nAdd new sources to merge them.',
         )
         return
     for source in sources:
         source.commands.append(PdfCutCommand(source.pages_expresion))
     toolkit = PdfToolkit(sources)
     toolkit.execute_commands()
-    toolkit.save_results()
+    with contextlib.suppress(Exception):
+        save_to_path = fd.asksaveasfilename(
+            defaultextension='.pdf',
+            title='Save merged PDF',
+            confirmoverwrite=True,
+            filetypes=(('pdf file', '*.pdf'),),
+        )
+        toolkit.save_results(save_to_path)
 
 
 root = tk.Tk()

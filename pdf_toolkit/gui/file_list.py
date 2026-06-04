@@ -35,7 +35,8 @@ class FileList(EditableTreeview, DraggableTreeview):
         :param file: file source
         """
         index = self._calculate_index(self.selection())
-        self.insert('', index, text=file.name, values=(file.pages_count, f'1-{file.pages_count}'))
+        all_pages_str = f'1-{file.pages_count}' if file.pages_count > 1 else '1'
+        self.insert('', index, text=file.name, values=(file.pages_count, all_pages_str))
         self._files.append(file)
 
     def _calculate_index(self, selection: tuple[str, ...]) -> int | Literal['end']:

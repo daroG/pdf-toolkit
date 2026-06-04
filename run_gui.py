@@ -1,10 +1,10 @@
 import logging
 
-from pdf_toolkit.gui.main_window import app
+from pdf_toolkit.gui.main_window import build_app
 
 
 logging.basicConfig(level=logging.INFO)
 
 
 if __name__ == '__main__':
-    app.mainloop()
+    build_app().mainloop()

@@ -1,26 +1,38 @@
-from os import listdir
-from os.path import isfile, join
+import argparse
+from pathlib import Path
 
-import pyguetzli
+from pdf_toolkit.image_optimizer.jpg_optimizer import JpgOptimizer
+
+
+def optimize_directory(input_path: str | Path, output_path: str | Path) -> int:
+    """
+    Optimize every image file in ``input_path`` into ``output_path``.
+
+    :param input_path: directory containing source images
+    :param output_path: directory to write optimized images into
+    :return: number of images optimized
+    """
+    input_dir = Path(input_path)
+    output_dir = Path(output_path)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    images = sorted(path for path in input_dir.iterdir() if path.is_file())
+    for image in images:
+        optimized = JpgOptimizer.load_from_path(image).optimize()
+        (output_dir / image.name).write_bytes(optimized)
+
+    return len(images)
+
+
+def main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(description='Optimize JPEG images with guetzli.')
+    parser.add_argument('input', help='directory containing source images')
+    parser.add_argument('output', help='directory to write optimized images into')
+    args = parser.parse_args(argv)
+
+    count = optimize_directory(args.input, args.output)
+    print(f'Optimized {count} images')
 
 
 if __name__ == '__main__':
-
-    input_path = 'D:/Obrazy/wanda&darek/2. ceremonia'
-    output_path = 'D:/Obrazy/wanda&darek/2. ceremonia - optimized'
-
-    only_files = [f for f in listdir(input_path) if isfile(join(input_path, f))]
-
-    print(f"Read {len(only_files)} images")
-
-    for f in only_files:
-        print(f"{f} in progress")
-        input_jpeg = open(join(input_path, f), "rb").read()
-        print(f"{f} opened")
-        optimized_jpeg = pyguetzli.process_jpeg_bytes(input_jpeg)
-        print(f"{f} optimized")
-
-        output = open(join(output_path, f), "wb")
-        print(f"{f} trying to write")
-        output.write(optimized_jpeg)
-        print(f"{f} - done")
+    main()

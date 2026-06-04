@@ -29,5 +29,5 @@ class PdfToolkit:
             writer.add_page(page)
 
         if path is None:
-            path = Path(f'./pdf_output_{time.time()}.pdf')
+            path = Path(f'./pdf_output_{int(time.time())}.pdf')
         writer.write(Path(path))

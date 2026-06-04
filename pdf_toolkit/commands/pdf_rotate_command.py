@@ -1,7 +1,5 @@
 from typing import Self, TYPE_CHECKING
 
-from pypdf import PageObject
-
 from pdf_toolkit.commands.pdf_command import PdfCommand
 from pdf_toolkit.page_number_comparator import PageNumberComparator
 
@@ -30,7 +28,7 @@ class PdfRotateCommand(PdfCommand):
         pages, angle = params.split('|', maxsplit=1)
         return cls(pages, angle)
 
-    def execute(self, source: 'PdfSource') -> list[PageObject]:
+    def execute(self, source: 'PdfSource') -> None:
         """
         Execute command on given source.
 
@@ -43,4 +41,4 @@ class PdfRotateCommand(PdfCommand):
             else:
                 new_pages.append(page)
 
-        return new_pages
+        source.last_result_pages = new_pages

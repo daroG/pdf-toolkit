@@ -90,7 +90,7 @@ class EditableTreeview(ttk.Treeview):
 
     def identify_row_and_column(self, x: int, y: int) -> tuple[str, str]:
         """
-        Identify row and column raw idexes under given widget coordinates.
+        Identify row and column raw indexes under given widget coordinates.
 
         :param x: x coordinate
         :param y: y coordinate

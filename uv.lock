@@ -226,13 +226,13 @@ dependencies = [
     { name = "pyguetzli" },
     { name = "pypdf" },
     { name = "pypdf4" },
-    { name = "ruff" },
     { name = "ttkbootstrap" },
 ]
 
 [package.dev-dependencies]
 dev = [
     { name = "pytest" },
+    { name = "ruff" },
 ]
 
 [package.metadata]
@@ -242,12 +242,14 @@ requires-dist = [
     { name = "pyguetzli", specifier = ">=1.0.14,<2" },
     { name = "pypdf", specifier = ">=3.5.2,<4" },
     { name = "pypdf4", specifier = ">=1.27.0,<2" },
-    { name = "ruff", specifier = ">=0.3.5,<0.4" },
     { name = "ttkbootstrap", specifier = ">=1.10.1,<2" },
 ]
 
 [package.metadata.requires-dev]
-dev = [{ name = "pytest", specifier = ">=7.2.2,<8" }]
+dev = [
+    { name = "pytest", specifier = ">=7.2.2,<8" },
+    { name = "ruff", specifier = ">=0.3.5,<0.4" },
+]
 
 [[package]]
 name = "pillow"

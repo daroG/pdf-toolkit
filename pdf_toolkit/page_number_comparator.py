@@ -70,9 +70,10 @@ class PageNumberComparator:
         numeric_conditions, non_numeric = cls._get_separated_conditions(pages_string)
         if max_number_of_pages < 0:
             max_number_of_pages = 2**32
-        pages = {
-            (page_number - 1) for page_number in numeric_conditions if page_number <= max_number_of_pages
-        }
+        for page_number in numeric_conditions:
+            if page_number > max_number_of_pages:
+                raise InvalidPageConditionError(str(page_number))
+        pages = {(page_number - 1) for page_number in numeric_conditions}
         for cond in non_numeric:
             if '-' not in cond:
                 raise InvalidPageConditionError(cond)

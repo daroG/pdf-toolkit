@@ -1,17 +1,12 @@
-import contextlib
 import tkinter as tk
-from logging import getLogger, INFO
 from tkinter import filedialog as fd, LEFT, messagebox as mb, RIGHT, TOP
 
 from pdf_toolkit.commands import PdfCutCommand
+from pdf_toolkit.exceptions import PdfToolkitError
 from pdf_toolkit.pdf_source import PdfSource
 from pdf_toolkit.pdf_toolkit import PdfToolkit
 
 from .file_list import FileList
-
-
-LOGGER = getLogger()
-LOGGER.setLevel(INFO)
 
 
 class MainWindow(tk.Frame):
@@ -107,23 +102,41 @@ def save_pdf(sources: list[PdfSource]) -> None:
             'There is no possibility to create empty pdf file.\nAdd new sources to merge them.',
         )
         return
-    for source in sources:
-        source.commands.append(PdfCutCommand(source.pages_expresion))
+
     toolkit = PdfToolkit(sources)
-    toolkit.execute_commands()
-    with contextlib.suppress(Exception):
-        save_to_path = fd.asksaveasfilename(
-            defaultextension='.pdf',
-            title='Save merged PDF',
-            confirmoverwrite=True,
-            filetypes=(('pdf file', '*.pdf'),),
-        )
+    try:
+        for source in sources:
+            source.commands.append(PdfCutCommand(source.pages_expression))
+        toolkit.execute_commands()
+    except PdfToolkitError as error:
+        mb.showerror('Invalid page selection', str(error))
+        return
+
+    save_to_path = fd.asksaveasfilename(
+        defaultextension='.pdf',
+        title='Save merged PDF',
+        confirmoverwrite=True,
+        filetypes=(('pdf file', '*.pdf'),),
+    )
+    if not save_to_path:
+        return  # user cancelled the save dialog
+
+    try:
         toolkit.save_results(save_to_path)
+    except OSError as error:
+        mb.showerror('Could not save PDF', str(error))
 
 
-root = tk.Tk()
-root.geometry('800x600+100+100')
-app = MainWindow(root)
+def build_app() -> MainWindow:
+    """
+    Build the main application window and its Tk root.
+
+    :return: the constructed MainWindow
+    """
+    root = tk.Tk()
+    root.geometry('800x600+100+100')
+    return MainWindow(root)
+
 
 if __name__ == '__main__':
-    app.mainloop()
+    build_app().mainloop()

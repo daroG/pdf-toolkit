@@ -1,4 +1,4 @@
-from . import PdfToolkitError
+from .pdf_toolkit_exception import PdfToolkitError
 
 
 class InvalidPageConditionError(PdfToolkitError):

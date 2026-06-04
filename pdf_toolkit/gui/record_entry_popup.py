@@ -21,6 +21,7 @@ class RecordEntryPopup(tk.Entry):
         self.values = values
         self.iid = iid
         self.column_edit_index = column_edit_index
+        self._closed = False
 
         self.insert(0, self.values[column_edit_index])
         self['exportselection'] = False
@@ -29,7 +30,7 @@ class RecordEntryPopup(tk.Entry):
         self.bind('<Return>', self._on_return)
         self.bind('<FocusOut>', self._on_return)
         self.bind('<Control-a>', self.select_all)
-        self.bind('<Escape>', lambda *_: self.destroy())
+        self.bind('<Escape>', self._on_escape)
 
     def _calc_all_values(self) -> int:
         return len(self.values)
@@ -43,7 +44,13 @@ class RecordEntryPopup(tk.Entry):
 
         return self.values[:self.column_edit_index] + (self.get(),) + self.values[self.column_edit_index + 1:]
 
-    def _on_return(self, _: Any) -> None:  # noqa: ANN401
+    def _on_return(self, _: Any = None) -> None:  # noqa: ANN401
+        # Both <Return> and <FocusOut> are bound here; closing the popup triggers
+        # a trailing <FocusOut>, so guard against committing twice / on a dead widget.
+        if self._closed:
+            return
+        self._closed = True
+
         updated_values = self._get_updated_values()
 
         self.treeview.item(
@@ -51,6 +58,11 @@ class RecordEntryPopup(tk.Entry):
             text=updated_values[0],
             values=updated_values[1:],
         )
+        self.destroy()
+
+    def _on_escape(self, _: Any = None) -> None:  # noqa: ANN401
+        """Close the popup without committing the edit."""
+        self._closed = True
         self.destroy()
 
     def select_all(self, *_: Any) -> str:  # noqa: ANN401

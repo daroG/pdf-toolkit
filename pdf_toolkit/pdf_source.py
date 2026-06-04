@@ -1,4 +1,5 @@
 from functools import cached_property
+from io import BytesIO
 from pathlib import Path
 
 from PIL import Image
@@ -24,9 +25,9 @@ class PdfSource:
     def __init__(self, path: str | Path, commands: list['PdfCommand'] | None = None) -> None:
         self.file_source = FileSource(path)
         self.commands = commands or []
-        self.pages_expresion = 'all'
+        self.pages_expression = 'all'
         self._read_pdf_file = None
-        self._result_pages: list[PageObject] = []
+        self._result_pages: list[PageObject] | None = None
 
     @property
     def reader(self) -> PdfReader:
@@ -36,7 +37,7 @@ class PdfSource:
 
     @property
     def last_result_pages(self) -> list[PageObject]:
-        if self._result_pages == []:
+        if self._result_pages is None:
             return self.reader.pages
         return self._result_pages
 
@@ -61,22 +62,19 @@ class PdfSourceFromImage:
     Image source.
     """
 
-    _TMP_PDF_NAME = 'tmp_pdf_image_from_pdf_pdf_toolkit.pdf'
-
     def __init__(self, path: str | Path, commands: list['PdfCommand'] | None = None) -> None:
         self.file_source = FileSource(path)
         self.commands = commands or []
-        self.pages_expresion = 'all'
+        self.pages_expression = 'all'
         self._read_pdf_file = self._get_pdf_from_image(self.file_source.path)
         self._result_pages: list[PageObject] = self._read_pdf_file.pages
 
     def _get_pdf_from_image(self, source: Path) -> PdfReader:
-        tmp_file_path = Path(self._TMP_PDF_NAME)
-        image = Image.open(source)
-        image.save(tmp_file_path)
-        reader = PdfReader(tmp_file_path)
-        tmp_file_path.unlink(missing_ok=True)
-        return reader
+        pdf_bytes = BytesIO()
+        with Image.open(source) as image:
+            image.save(pdf_bytes, format='PDF')
+        pdf_bytes.seek(0)
+        return PdfReader(pdf_bytes)
 
     @property
     def reader(self) -> PdfReader:

@@ -26,7 +26,7 @@ class PdfCommandFactory:
         """
         Create a command from given command string.
 
-        :param command: strigified PdfCommand
+        :param command: stringified PdfCommand
         :return: instance of PdfCommand
         """
         command_type, command_params = command.split(_COMMAND_TYPE_SEPARATOR, maxsplit=1)
